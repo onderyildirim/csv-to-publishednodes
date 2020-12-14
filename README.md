@@ -2,15 +2,16 @@
 
 Converts CSV files to published nodes json file to be used with Azure Industrial IoT OPC Publisher module.
 
-USAGE: Convert-CSVToPublishedNodes.ps1  [OPTIONS]
+USAGE: `Convert-CSVToPublishedNodes.ps1  [OPTIONS]`
 
-SAMPLE: Convert-CSVToPublishedNodes.ps1  -InputFileName sample.csv
+SAMPLE: `Convert-CSVToPublishedNodes.ps1  -InputFileName sample.csv`
 
 OPTIONS:
-          -h, Help : (Optional)  Display this screen.
-          -InputFileName : (Mandatory) Path to the input file. Needs to be in CSV format.
-          -OutputFileName : (Optional)  Path to the output file. Default: Same name as input file, with JSON extension.
-          -Delimiter : (Optional)  Column delimiter in CSV file. Default: ','
+
+​          `-h, Help : (Optional)  Display this screen.`
+​          `-InputFileName : (Mandatory) Path to the input file. Needs to be in CSV format.`
+​          `-OutputFileName : (Optional)  Path to the output file. Default: Same name as input file, with JSON extension.`
+​          `-Delimiter : (Optional)  Column delimiter in CSV file. Default: ','`
 
 * InputFileName includes a line for each distinct OPC Node (OpcNodes_Id or OpcNodes_ExpandedNodeId).
 
