@@ -40,3 +40,11 @@ OPTIONS:<br />
     | OpcNodes_SkipFirst             | [optional] , [boolean] | When true, first event will not generate a telemetry event, this is useful when publishing a large amount of data to prevent a event flood at startup of OPC Publisher. |
 
     
+
+The tool also checks for various errors and discrepancies in your list such as
+
+- Same node ID is used twice for the same EndpointUrl (OPC Server)
+- Same EndpointUrl is used with different security settings (UseSecurity or OpcAuthenticationMode)
+- Inconsistent security settings (e.g OpcAuthenticationMode is set to "Anonymous" and Username/Password is provided)
+- Same DisplayName used for multiple nodes under same EndpointUrl
+- Publishing a value more frequently than it is sampled 
