@@ -4,8 +4,8 @@ Param(
     [Alias("h")]
     [switch]$Help,
 
-    [Parameter()] #[Parameter(Mandatory=$true)]
-    [String]$InputFileName="nodelist.csv",
+    [Parameter(Mandatory=$true)]
+    [String]$InputFileName,
 
     [Parameter()]
     [string]$OutputFileName,
