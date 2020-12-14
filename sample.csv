@@ -1,0 +1,4 @@
+﻿EndpointUrl,UseSecurity,OpcAuthenticationMode,Username,Password,OpcNodes_Id,OpcNodes_ExpandedNodeId,OpcNodes_OpcSamplingInterval,OpcNodes_OpcPublishingInterval,OpcNodes_DisplayName,OpcNodes_HeartbeatInterval,OpcNodes_SkipFirst
+opc.tcp://opcsimulator:54845/OPCUA/Site1,FALSE,,,,ns=1;s=STATUS,,1000,5000,STATUS,,TRUE
+opc.tcp://opcsimulator:54845/OPCUA/Site1,FALSE,,,,ns=1;s=STATUS2,,1000,5000,STATUS2,,TRUE
+opc.tcp://opcsimulator:54845/OPCUA/Site1,FALSE,,,,ns=1;s=STATUS,,,,,,
