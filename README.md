@@ -6,12 +6,11 @@ USAGE: `Convert-CSVToPublishedNodes.ps1  [OPTIONS]`
 
 SAMPLE: `Convert-CSVToPublishedNodes.ps1  -InputFileName sample.csv`
 
-OPTIONS:
-
-​          `-h, Help : (Optional)  Display this screen.`
-​          `-InputFileName : (Mandatory) Path to the input file. Needs to be in CSV format.`
-​          `-OutputFileName : (Optional)  Path to the output file. Default: Same name as input file, with JSON extension.`
-​          `-Delimiter : (Optional)  Column delimiter in CSV file. Default: ','`
+OPTIONS:<br />
+`​          -h, Help : (Optional)  Display this screen.`<br />
+`​          -InputFileName : (Mandatory) Path to the input file. Needs to be in CSV format.`<br />
+`​          -OutputFileName : (Optional)  Path to the output file. Default: Same name as input file, with JSON extension.`<br />
+`​          -Delimiter : (Optional)  Column delimiter in CSV file. Default: ','`<br />
 
 * InputFileName includes a line for each distinct OPC Node (OpcNodes_Id or OpcNodes_ExpandedNodeId).
 
