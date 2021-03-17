@@ -15,8 +15,6 @@ Param(
     )
 
 
-Function iif($If, $Right, $Wrong) {If ($If) {$Right} Else {$Wrong}}
-
 if((-not $InputFileName) -or ($Help -eq $true))
 {
     Write-Host "Usage: $($MyInvocation.MyCommand.Name) [OPTIONS]"
@@ -60,7 +58,8 @@ if (-not $(Test-Path $InputFileName -PathType Leaf))
 $InputFileName = (Get-Item $InputFileName).FullName
 if (-not $OutputFileName) {
     $OutputFileName = [System.IO.Path]::GetFileNameWithoutExtension($(Split-Path $InputFileName -Leaf))
-    $OutputFileName = Join-Path $pwd ($OutputFileName + ".json")
+    $destPath = Split-Path -Path $InputFileName
+    $OutputFileName = Join-Path $destPath ($OutputFileName + ".json")
 }
 $OutputFileName = [System.IO.Path]::GetFullPath($OutputFileName)
 
@@ -102,7 +101,12 @@ foreach ($node in $nodeListInput) {
         $prevPassword=if(-not $node.Password){$null}else{$node.Password}
 
         
-        $currentServerNode=$nodeListOutput | where {($_.EndpointUrl -eq $node.EndpointUrl) -and ($_.UseSecurity -eq $node.UseSecurity) -and ($_.OpcAuthenticationMode -eq $node.OpcAuthenticationMode) -and ($_.Username -eq $node.Username) -and ($_.Password -eq $node.Password)}
+        $currentServerNode=$nodeListOutput | `
+                where {($_.EndpointUrl -eq $node.EndpointUrl) -and `
+                       (($_.UseSecurity -eq $node.UseSecurity) -or ([string]::IsNullOrWhiteSpace($_.UseSecurity) -and [string]::IsNullOrWhiteSpace($node.UseSecurity))) -and `
+                       (($_.OpcAuthenticationMode -eq $node.OpcAuthenticationMode) -or ([string]::IsNullOrWhiteSpace($_.OpcAuthenticationMode) -and [string]::IsNullOrWhiteSpace($node.OpcAuthenticationMode))) -and `
+                       (($_.Username -eq $node.Username) -or ([string]::IsNullOrWhiteSpace($_.Username) -and [string]::IsNullOrWhiteSpace($node.Username))) -and `
+                       (($_.Password -eq $node.Password) -or ([string]::IsNullOrWhiteSpace($_.Password) -and [string]::IsNullOrWhiteSpace($node.Password)))}
 
         if (-not $currentServerNode)
         {
