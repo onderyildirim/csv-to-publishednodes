@@ -61,7 +61,7 @@ if (-not $OutputFileName) {
     $destPath = Split-Path -Path $InputFileName
     $OutputFileName = Join-Path $destPath ($OutputFileName + ".json")
 }
-$OutputFileName = [System.IO.Path]::GetFullPath($OutputFileName)
+#$OutputFileName = [System.IO.Path]::GetFullPath($OutputFileName)
 
 Write-Host "PARAMETERS:"
 Write-Host "    InputFileName : $InputFileName"
@@ -72,6 +72,8 @@ Write-Host ""
 $nodeListInput = Get-Content $InputFileName | ConvertFrom-Csv -Delimiter $Delimiter
 $nodeListOutput = [System.Collections.ArrayList][ordered]@{}
 $currentServerNode=$null
+$lineCount=$nodeListInput.Count
+
 
 $prevEndpointUrl=$null
 $prevUseSecurity=$null
@@ -174,6 +176,13 @@ foreach ($node in $nodeListInput) {
     {
         Write-Host "[error] Line $lineNum : EndpointUrl value is empty." -ForegroundColor Red
     }
+
+    $pct =[int] ((($lineNum-2)/$lineCount)*100)
+    Write-Progress -Activity "Processing ..." -Status "$pct% ($lineNum/$lineCount) complete." -PercentComplete $pct
+
 }
 
-$nodeListOutput | ConvertTo-Json -depth 100 | Out-File $OutputFileName 
+Write-Output "Writing to file: $OutputFileName..."
+$jsonTop = [System.Collections.ArrayList][ordered]@{}
+[void]$jsonTop.Add($nodeListOutput)
+$jsonTop | ConvertTo-Json -depth 100 | Out-File $OutputFileName 
