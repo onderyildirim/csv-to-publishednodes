@@ -32,8 +32,8 @@ if((-not $InputFileName) -or ($Help -eq $true))
     Write-Host "    EndpointUrl                   : ([mandatory], [string] ) URL of OPC UA Server in format ""opc.tcp://<your_opcua_server>:<your_opcua_server_port>/<your_opcua_server_path>""."
     Write-Host "    UseSecurity                   : ([optional] , [boolean]) Allows to access the endpoint with SecurityPolicy.None when set to 'false' (no signing and encryption applied to the OPC UA communication), default is true"
     Write-Host "    OpcAuthenticationMode         : ([optional] , [string] ) ""Anonymous"" or ""UsernamePassword"", default is ""Anonymous"""
-    Write-Host "    Username                      : ([optional] , [string] ) Valid only if ""OpcAuthenticationMode"": ""UsernamePassword"""
-    Write-Host "    Password                      : ([optional] , [string] ) Valid only if ""OpcAuthenticationMode"": ""UsernamePassword"""
+    Write-Host "    OpcAuthenticationUsername     : ([optional] , [string] ) Valid only if ""OpcAuthenticationMode"": ""UsernamePassword"""
+    Write-Host "    OpcAuthenticationPassword     : ([optional] , [string] ) Valid only if ""OpcAuthenticationMode"": ""UsernamePassword"""
     Write-Host "    OpcNodes_Id                   : ([mandatory], [string] ) OPC node to publish in either NodeId format (contains ""ns="", e.g. ""ns=3;i=1234"") or ExpandedNodeId format (contains ""nsu="", e.g. ""nsu=http://mycompany.com/UA/Data;i=1234"")."
     Write-Host "                                                             Only one of ""Id"" or ""ExpandedNodeID"" is mandatory."
     Write-Host "    OpcNodes_ExpandedNodeId       : ([mandatory], [string] ) OPC node to publish in either NodeId format (contains ""ns="", e.g. ""ns=3;i=1234"") or ExpandedNodeId format (contains ""nsu="", e.g. ""nsu=http://mycompany.com/UA/Data;i=1234"")."
@@ -90,8 +90,8 @@ foreach ($node in $nodeListInput) {
         $node.EndpointUrl=$prevEndpointUrl
         if(-not $node.UseSecurity){$node.UseSecurity=$prevUseSecurity}
         if(-not $node.OpcAuthenticationMode){$node.OpcAuthenticationMode=$prevOpcAuthenticationMode}
-        if(-not $node.Username){$node.Username=$prevUsername}
-        if(-not $node.Password){$node.Password=$prevPassword}
+        if(-not $node.OpcAuthenticationUsername){$node.OpcAuthenticationUsername=$prevUsername}
+        if(-not $node.OpcAuthenticationPassword){$node.OpcAuthenticationPassword=$prevPassword}
     }
 
     if($node.EndpointUrl)
@@ -99,34 +99,34 @@ foreach ($node in $nodeListInput) {
         $prevEndpointUrl=$node.EndpointUrl
         $prevUseSecurity=if(-not $node.UseSecurity){$null}else{$node.UseSecurity}
         $prevOpcAuthenticationMode=if(-not $node.OpcAuthenticationMode){$null}else{$node.OpcAuthenticationMode}
-        $prevUsername=if(-not $node.Username){$null}else{$node.Username}
-        $prevPassword=if(-not $node.Password){$null}else{$node.Password}
+        $prevUsername=if(-not $node.OpcAuthenticationUsername){$null}else{$node.OpcAuthenticationUsername}
+        $prevPassword=if(-not $node.OpcAuthenticationPassword){$null}else{$node.OpcAuthenticationPassword}
 
         
         $currentServerNode=$nodeListOutput | `
                 where {($_.EndpointUrl -eq $node.EndpointUrl) -and `
                        (($_.UseSecurity -eq $node.UseSecurity) -or ([string]::IsNullOrWhiteSpace($_.UseSecurity) -and [string]::IsNullOrWhiteSpace($node.UseSecurity))) -and `
                        (($_.OpcAuthenticationMode -eq $node.OpcAuthenticationMode) -or ([string]::IsNullOrWhiteSpace($_.OpcAuthenticationMode) -and [string]::IsNullOrWhiteSpace($node.OpcAuthenticationMode))) -and `
-                       (($_.Username -eq $node.Username) -or ([string]::IsNullOrWhiteSpace($_.Username) -and [string]::IsNullOrWhiteSpace($node.Username))) -and `
-                       (($_.Password -eq $node.Password) -or ([string]::IsNullOrWhiteSpace($_.Password) -and [string]::IsNullOrWhiteSpace($node.Password)))}
+                       (($_.OpcAuthenticationUsername -eq $node.OpcAuthenticationUsername) -or ([string]::IsNullOrWhiteSpace($_.OpcAuthenticationUsername) -and [string]::IsNullOrWhiteSpace($node.OpcAuthenticationUsername))) -and `
+                       (($_.OpcAuthenticationPassword -eq $node.OpcAuthenticationPassword) -or ([string]::IsNullOrWhiteSpace($_.OpcAuthenticationPassword) -and [string]::IsNullOrWhiteSpace($node.OpcAuthenticationPassword)))}
 
         if (-not $currentServerNode)
         {
 
-            if ($nodeListOutput | where {($_.EndpointUrl -eq $node.EndpointUrl)}) {Write-Host "[warn ] Line $lineNum : EndpointUrl '$($node.EndpointUrl)' appears more than once with different 'UseSecurity', 'OpcAuthenticationMode', 'Username' or 'Password' settings."  -ForegroundColor Yellow}
+            if ($nodeListOutput | where {($_.EndpointUrl -eq $node.EndpointUrl)}) {Write-Host "[warn ] Line $lineNum : EndpointUrl '$($node.EndpointUrl)' appears more than once with different 'UseSecurity', 'OpcAuthenticationMode', 'OpcAuthenticationUsername' or 'OpcAuthenticationPassword' settings."  -ForegroundColor Yellow}
 
             $currentServerNode=[ordered]@{'EndpointUrl'=$node.EndpointUrl}
             if ($node.UseSecurity) {$currentServerNode.UseSecurity=$node.UseSecurity}
             if ($node.OpcAuthenticationMode) {$currentServerNode.OpcAuthenticationMode=$node.OpcAuthenticationMode}
-            if ($node.Username) {$currentServerNode.Username=$node.Username}
-            if ($node.Password) {$currentServerNode.Password=$node.Password}
+            if ($node.OpcAuthenticationUsername) {$currentServerNode.OpcAuthenticationUsername=$node.OpcAuthenticationUsername}
+            if ($node.OpcAuthenticationPassword) {$currentServerNode.OpcAuthenticationPassword=$node.OpcAuthenticationPassword}
 
             $dataPointNodes=[System.Collections.ArrayList]@{}
             $currentServerNode.OpcNodes=$dataPointNodes
             [void]$nodeListOutput.Add($currentServerNode)
         }
         
-        if ((([string]$node.OpcAuthenticationMode) -eq "Anonymous") -and (($node.Username) -or ($node.Password))){Write-Host "[warn ] Line $lineNum : 'Username' and 'Password' settings are not used with 'Anonymous' authentication (EndpointUrl : '$($node.EndpointUrl)')" -ForegroundColor Yellow}
+        if ((([string]$node.OpcAuthenticationMode) -eq "Anonymous") -and (($node.OpcAuthenticationUsername) -or ($node.OpcAuthenticationPassword))){Write-Host "[warn ] Line $lineNum : 'OpcAuthenticationUsername' and 'OpcAuthenticationPassword' settings are not used with 'Anonymous' authentication (EndpointUrl : '$($node.EndpointUrl)')" -ForegroundColor Yellow}
 
         if(($node.OpcNodes_Id) -or ($node.OpcNodes_ExpandedNodeId))
         {
