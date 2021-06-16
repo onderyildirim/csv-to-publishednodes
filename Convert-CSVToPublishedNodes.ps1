@@ -81,6 +81,9 @@ $prevOpcAuthenticationMode=$null
 $prevUsername=$null
 $prevPassword=$null
 
+$expandedNodeIdExists=$nodeListInput | where {-not [string]::IsNullOrWhiteSpace($_.OpcNodes_ExpandedNodeId)}
+
+
 $lineNum=0
 
 foreach ($node in $nodeListInput) {
@@ -116,8 +119,13 @@ foreach ($node in $nodeListInput) {
             if ($nodeListOutput | where {($_.EndpointUrl -eq $node.EndpointUrl)}) {Write-Host "[warn ] Line $lineNum : EndpointUrl '$($node.EndpointUrl)' appears more than once with different 'UseSecurity', 'OpcAuthenticationMode', 'OpcAuthenticationUsername' or 'OpcAuthenticationPassword' settings."  -ForegroundColor Yellow}
 
             $currentServerNode=[ordered]@{'EndpointUrl'=$node.EndpointUrl}
-            if ($node.UseSecurity) {$currentServerNode.UseSecurity=$node.UseSecurity}
-            if ($node.OpcAuthenticationMode) {$currentServerNode.OpcAuthenticationMode=$node.OpcAuthenticationMode}
+            if ($node.UseSecurity) {$currentServerNode.UseSecurity=[System.Convert]::ToBoolean($node.UseSecurity)}
+            if ($node.OpcAuthenticationMode) 
+            {
+                if ($node.OpcAuthenticationMode -in "UsernamePassword", "Anonymous"){$currentServerNode.OpcAuthenticationMode=$node.OpcAuthenticationMode}
+                else {Write-Host "[warn ] Line $lineNum : Invalid OpcAuthenticationMode '$($node.OpcAuthenticationMode)'" -ForegroundColor Red}
+            }
+
             if ($node.OpcAuthenticationUsername) {$currentServerNode.OpcAuthenticationUsername=$node.OpcAuthenticationUsername}
             if ($node.OpcAuthenticationPassword) {$currentServerNode.OpcAuthenticationPassword=$node.OpcAuthenticationPassword}
 
@@ -131,7 +139,7 @@ foreach ($node in $nodeListInput) {
         if(($node.OpcNodes_Id) -or ($node.OpcNodes_ExpandedNodeId))
         {
             $existingNode=$currentServerNode.OpcNodes | where {$_.Id -ceq $node.OpcNodes_Id}
-            if(-not $existingNode){$existingNode=$currentServerNode.OpcNodes | where {$_.Id -ceq $node.OpcNodes_ExpandedNodeId}}
+            if((-not $existingNode) -and ($expandedNodeIdExists)) {$existingNode=$currentServerNode.OpcNodes | where {$_.Id -ceq $node.OpcNodes_ExpandedNodeId}}
             if(-not $existingNode)
             {
                 if($node.OpcNodes_Id)
@@ -147,7 +155,7 @@ foreach ($node in $nodeListInput) {
                 if ($node.OpcNodes_OpcPublishingInterval){$dataPointNode.OpcPublishingInterval=[int]$node.OpcNodes_OpcPublishingInterval}
                 if ($node.OpcNodes_DisplayName){$dataPointNode.DisplayName=$node.OpcNodes_DisplayName}
                 if ($node.OpcNodes_HeartbeatInterval){$dataPointNode.HeartbeatInterval=[int]$node.OpcNodes_HeartbeatInterval}
-                if ($node.OpcNodes_SkipFirst){$dataPointNode.SkipFirst=[boolean]$node.OpcNodes_SkipFirst}
+                if ($node.OpcNodes_SkipFirst){$dataPointNode.SkipFirst=[System.Convert]::ToBoolean($node.OpcNodes_SkipFirst)}
 
                 if(($dataPointNode.OpcPublishingInterval) -and ($dataPointNode.OpcSamplingInterval) -and ($dataPointNode.OpcPublishingInterval -lt $dataPointNode.OpcSamplingInterval))
                 {
@@ -177,7 +185,7 @@ foreach ($node in $nodeListInput) {
         Write-Host "[error] Line $lineNum : EndpointUrl value is empty." -ForegroundColor Red
     }
 
-    $pct =[int] ((($lineNum-2)/$lineCount)*100)
+    $pct =[int] ((($lineNum)/$lineCount)*100)
     Write-Progress -Activity "Processing ..." -Status "$pct% ($lineNum/$lineCount) complete." -PercentComplete $pct
 
 }
