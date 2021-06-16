@@ -130,8 +130,8 @@ foreach ($node in $nodeListInput) {
 
         if(($node.OpcNodes_Id) -or ($node.OpcNodes_ExpandedNodeId))
         {
-            $existingNode=$currentServerNode.OpcNodes | where {$_.Id -eq $node.OpcNodes_Id}
-            if(-not $existingNode){$existingNode=$currentServerNode.OpcNodes | where {$_.Id -eq $node.OpcNodes_ExpandedNodeId}}
+            $existingNode=$currentServerNode.OpcNodes | where {$_.Id -ceq $node.OpcNodes_Id}
+            if(-not $existingNode){$existingNode=$currentServerNode.OpcNodes | where {$_.Id -ceq $node.OpcNodes_ExpandedNodeId}}
             if(-not $existingNode)
             {
                 if($node.OpcNodes_Id)
