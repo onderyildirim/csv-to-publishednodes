@@ -47,30 +47,6 @@ if((-not $InputFileName) -or ($Help -eq $true))
 }
 
 
-$global:stopWatch=[System.Diagnostics.Stopwatch]::StartNew()
-$global:execStats=[System.Int64[]]::new(100)
-$global:debug=$false
-
-function MeasureStopWatch()
-{
-Param ([int]$index)
-if ($global:debug -eq $true)
-{
-    if ($index -gt -1){$global:execStats[$index]+=$global:stopWatch.ElapsedTicks}
-    $global:stopWatch.Restart()
-}
-}
-
-function FormatDuration()
-{
-Param ([TimeSpan]$TimeSpan)
-$TimeSpanStr = ""
-if($TimeSpan.Days>0) {$TimeSpanStr = [String]::Format("{0} days ",$TimeSpan.Days)}
-$TimeSpanStr = [String]::Format("{0:hh}:{0:mm}:{0:ss}",$TimeSpan)
-return $TimeSpanStr
-}
-
-
 
 
 if (-not $(Test-Path $InputFileName -PathType Leaf))
@@ -85,6 +61,7 @@ if (-not $OutputFileName) {
     $destPath = Split-Path -Path $InputFileName
     $OutputFileName = Join-Path $destPath ($OutputFileName + ".json")
 }
+#$OutputFileName = [System.IO.Path]::GetFullPath($OutputFileName)
 
 Write-Host "PARAMETERS:"
 Write-Host "    InputFileName : $InputFileName"
@@ -97,10 +74,6 @@ $nodeListOutput = [System.Collections.ArrayList][ordered]@{}
 $currentServerNode=$null
 $lineCount=$nodeListInput.Count
 
-$nodeIdList = New-Object system.collections.hashtable #case sensitive hashtables
-#$nodeIdList = @{} #case insensitive hashtables
-$displayNameList = New-Object system.collections.hashtable #case sensitive hashtables
-#$displayNameList = @{} #case insensitive hashtables
 
 $prevEndpointUrl=$null
 $prevUseSecurity=$null
@@ -110,7 +83,15 @@ $prevPassword=$null
 
 $expandedNodeIdExists=$nodeListInput | where {-not [string]::IsNullOrWhiteSpace($_.OpcNodes_ExpandedNodeId)}
 
-$timeStarted= Get-Date
+$global:stopWatch=[System.Diagnostics.Stopwatch]::StartNew()
+$global:execStats=[System.Int64[]]::new(100)
+
+function MeasureStopWatch()
+{
+Param ([int]$index)
+    if ($index -gt -1){$global:execStats[$index]+=$global:stopWatch.ElapsedTicks}
+    $global:stopWatch.Restart()
+}
 
 $lineNum=0
 
@@ -137,19 +118,19 @@ foreach ($node in $nodeListInput) {
         $prevPassword=if(-not $node.OpcAuthenticationPassword){$null}else{$node.OpcAuthenticationPassword}
 
         MeasureStopWatch -index 0
-         
+
         $currentServerNode=$nodeListOutput | `
-                .{process{If(($_.EndpointUrl -eq $node.EndpointUrl) -and `
+                where {($_.EndpointUrl -eq $node.EndpointUrl) -and `
                        (($_.UseSecurity -eq $node.UseSecurity) -or ([string]::IsNullOrWhiteSpace($_.UseSecurity) -and [string]::IsNullOrWhiteSpace($node.UseSecurity))) -and `
                        (($_.OpcAuthenticationMode -eq $node.OpcAuthenticationMode) -or ([string]::IsNullOrWhiteSpace($_.OpcAuthenticationMode) -and [string]::IsNullOrWhiteSpace($node.OpcAuthenticationMode))) -and `
                        (($_.OpcAuthenticationUsername -eq $node.OpcAuthenticationUsername) -or ([string]::IsNullOrWhiteSpace($_.OpcAuthenticationUsername) -and [string]::IsNullOrWhiteSpace($node.OpcAuthenticationUsername))) -and `
-                       (($_.OpcAuthenticationPassword -eq $node.OpcAuthenticationPassword) -or ([string]::IsNullOrWhiteSpace($_.OpcAuthenticationPassword) -and [string]::IsNullOrWhiteSpace($node.OpcAuthenticationPassword)))){$_}}}
+                       (($_.OpcAuthenticationPassword -eq $node.OpcAuthenticationPassword) -or ([string]::IsNullOrWhiteSpace($_.OpcAuthenticationPassword) -and [string]::IsNullOrWhiteSpace($node.OpcAuthenticationPassword)))}
 
         MeasureStopWatch -index 1
         if (-not $currentServerNode)
         {
 
-            if ($nodeListOutput | .{process{If($_.EndpointUrl -eq $node.EndpointUrl){$_}}}) {Write-Host "[warn ] Line $lineNum : EndpointUrl '$($node.EndpointUrl)' appears more than once with different 'UseSecurity', 'OpcAuthenticationMode', 'OpcAuthenticationUsername' or 'OpcAuthenticationPassword' settings."  -ForegroundColor Yellow}
+            if ($nodeListOutput | where {($_.EndpointUrl -eq $node.EndpointUrl)}) {Write-Host "[warn ] Line $lineNum : EndpointUrl '$($node.EndpointUrl)' appears more than once with different 'UseSecurity', 'OpcAuthenticationMode', 'OpcAuthenticationUsername' or 'OpcAuthenticationPassword' settings."  -ForegroundColor Yellow}
 
             $currentServerNode=[ordered]@{'EndpointUrl'=$node.EndpointUrl}
             if ($node.UseSecurity) {$currentServerNode.UseSecurity=[System.Convert]::ToBoolean($node.UseSecurity)}
@@ -172,8 +153,8 @@ foreach ($node in $nodeListInput) {
 
         if(($node.OpcNodes_Id) -or ($node.OpcNodes_ExpandedNodeId))
         {
-            $existingNode=$nodeIdList[$node.OpcNodes_Id]
-            if((-not $existingNode) -and ($expandedNodeIdExists)) {$nodeIdList[$node.$node.OpcNodes_ExpandedNodeId]}
+            $existingNode=$currentServerNode.OpcNodes | where {$_.Id -ceq $node.OpcNodes_Id}
+            if((-not $existingNode) -and ($expandedNodeIdExists)) {$existingNode=$currentServerNode.OpcNodes | where {$_.Id -ceq $node.OpcNodes_ExpandedNodeId}}
         MeasureStopWatch -index 3
 
             if(-not $existingNode)
@@ -199,15 +180,13 @@ foreach ($node in $nodeListInput) {
                 }
 
         MeasureStopWatch -index 4
-                if (($node.OpcNodes_DisplayName) -and $displayNameList.ContainsKey($node.OpcNodes_DisplayName))
+                if (($node.OpcNodes_DisplayName) -and $($currentServerNode.OpcNodes | where {$_.DisplayName -eq $node.OpcNodes_DisplayName}))
                 {
                     Write-Host "[warn ] Line $lineNum : 'DisplayName'='$($node.OpcNodes_DisplayName)' appears more than once under 'EndpointUrl'='$($node.EndpointUrl)'." -ForegroundColor Yellow
                 }
 
         MeasureStopWatch -index 5
                 [void]$currentServerNode.OpcNodes.Add($dataPointNode)
-                [void]$nodeIdList.Add($dataPointNode.Id,$dataPointNode)
-                [void]$displayNameList.Add($dataPointNode.DisplayName,$dataPointNode)
         MeasureStopWatch -index 6
             }
             else
@@ -226,26 +205,11 @@ foreach ($node in $nodeListInput) {
         Write-Host "[error] Line $lineNum : EndpointUrl value is empty." -ForegroundColor Red
     }
 
-    #if total lines >1000 then update status every 100 records
-    if (($lineCount -le 1000) -or (($lineCount -gt 1000) -and ($lineNum%100 -eq 0)))
-    {
-        $completeratio = [double](($lineNum)/[double]$lineCount)
-        $pct =[int] ($completeratio*100)
-        $timeElapsed = New-TimeSpan -Start $timeStarted -End $(Get-Date)
-        $totalTime = New-TimeSpan -Seconds ([Int64]([double]$timeElapsed.TotalSeconds * [double]$lineCount / [double]$lineNum))
-        $timeRemaining=$totalTime - $timeElapsed
-
-        $timeRemainingStr = FormatDuration -TimeSpan $timeRemaining
-        $timeElapsedStr = FormatDuration -TimeSpan $timeElapsed
-        $totalTimeStr = FormatDuration -TimeSpan $totalTime
-
-        $statusMsg=[String]::Format("{0}% ({1}/{2}) Complete. Time Elapsed:{3} Time Remaining:{4} Total Time:{5}", $pct,$lineNum,$lineCount,$timeElapsedStr, $timeRemainingStr, $totalTimeStr)
-        Write-Progress -Activity "Processing ..." -Status $statusMsg -PercentComplete $pct
-
+    $pct =[int] ((($lineNum)/$lineCount)*100)
+    Write-Progress -Activity "Processing ..." -Status "$pct% ($lineNum/$lineCount) complete." -PercentComplete $pct
         MeasureStopWatch -index 7
-    }
     
-    #if ($global:debug -eq $true){if ($lineNum -gt 30000){break}}
+    if ($lineNum -gt 500){break}
 }
 
 Write-Output "Writing to file: $OutputFileName..."
@@ -254,13 +218,6 @@ $jsonTop = [System.Collections.ArrayList][ordered]@{}
 $jsonTop | ConvertTo-Json -depth 100 | Out-File $OutputFileName 
 
 
-$timeElapsed = New-TimeSpan -Start $timeStarted -End $(Get-Date)
-$statusMsg=[String]::Format("Finished. Total time: {0:hh}:{0:mm}:{0:ss}", $timeElapsed)
-Write-Output $statusMsg
-
-if ($global:debug -eq $true)
-{
-    For($i=0; $i -le 7; $i++) {Write-Host "$i : $($global:execStats[$i])"}
-}
+For($i=0; $i -le 7; $i++) {Write-Host "$i : $($global:execStats[$i])"}
 
 
