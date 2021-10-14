@@ -152,7 +152,7 @@
                     "eventTimeToLiveInMinutes": 1440
                 }
             }
-        }    
+        }
     ],
     "outputs": {
         "storageAccountKey": {
