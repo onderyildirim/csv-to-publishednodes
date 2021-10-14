@@ -90,6 +90,24 @@
                     "keySource": "Microsoft.Storage"
                 }
             }
+        },
+        {
+            "comments": "Log storage account container",
+            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+            "name": "[concat(parameters('storageAccountName'), '/default/', parameters('storageContainerName'))]",
+            "apiVersion": "2019-06-01",
+            "dependsOn": [
+                "[if(parameters('createStorageAccount'), variables('storageAccountId'), 'saDummyTemplate')]"
+            ]
+        },
+        {
+            "comments": "Log storage account queue",
+            "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
+            "name": "[concat(parameters('storageAccountName'), '/default/', parameters('storageQueueName'))]",
+            "apiVersion": "2021-01-01",
+            "dependsOn": [
+                "[if(parameters('createStorageAccount'), variables('storageAccountId'), 'saDummyTemplate')]"
+            ]
         }    
     ],
     "outputs": {
