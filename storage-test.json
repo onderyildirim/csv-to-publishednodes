@@ -108,21 +108,6 @@
             "dependsOn": [
                 "[if(parameters('createStorageAccount'), variables('storageAccountId'), 'saDummyTemplate')]"
             ]
-        },
-        {
-            "comments": "Event grid system topic for logs storage account",
-            "condition": "[parameters('createEventGridSystemTopic')]",
-            "type": "Microsoft.EventGrid/systemTopics",
-            "apiVersion": "2020-10-15-preview",
-            "name": "[parameters('eventGridSystemTopicName')]",
-            "location": "[parameters('storageAccountLocation')]",
-            "dependsOn": [
-                "[if(parameters('createStorageAccount'), variables('storageAccountId'), 'saDummyTemplate')]"
-            ],
-            "properties": {
-                "topicType": "microsoft.storage.storageaccounts",
-                "source": "[variables('storageAccountId')]"
-            }
         }
     ],
     "outputs": {
