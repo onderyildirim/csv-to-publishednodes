@@ -124,6 +124,36 @@
                 "topicType": "microsoft.storage.storageaccounts",
                 "source": "[variables('storageAccountId')]"
             }
+        },
+        {
+            "comments": "Event grid subscription for storage queue",
+            "type": "Microsoft.EventGrid/systemTopics/eventSubscriptions",
+            "apiVersion": "2020-10-15-preview",
+            "name": "[concat(parameters('eventGridSystemTopicName'), '/', parameters('eventGridSubscriptionName'))]",
+            "tags": {"fi_c_network_opex": "cf103001", "fi_delivery_status": "project"},
+            "dependsOn": [
+                "[if(parameters('createEventGridSystemTopic'), variables('systemTopicId'), 'saDummyTemplate')]"
+            ],
+            "properties": {
+                "destination": {
+                    "properties": {
+                        "resourceId": "[variables('storageAccountId')]",
+                        "queueName": "[parameters('storageQueueName')]"
+                    },
+                    "endpointType": "StorageQueue"
+                },
+                "filter": {
+                    "subjectBeginsWith": "[parameters('eventGridSubscriptionFilter')]",
+                    "includedEventTypes": [
+                        "Microsoft.Storage.BlobCreated"
+                    ]
+                },
+                "eventDeliverySchema": "EventGridSchema",
+                "retryPolicy": {
+                    "maxDeliveryAttempts": 30,
+                    "eventTimeToLiveInMinutes": 1440
+                }
+            }
         }
     ],
     "outputs": {
