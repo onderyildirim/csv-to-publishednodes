@@ -55,7 +55,43 @@
                 },
                 "parameters": {}
             }
-        }    ],
+        },
+        {
+            "comments": "Logs storage account",
+            "condition": "[parameters('createStorageAccount')]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[parameters('storageAccountName')]",
+            "apiVersion": "2019-04-01",
+            "location": "[parameters('storageAccountLocation')]",
+            "kind": "StorageV2",
+            "sku": {
+                "name": "[parameters('storageAccountSku')]"
+            },
+            "properties": {
+                "isHnsEnabled": true,
+                "networkAcls": {
+                    "bypass": "AzureServices",
+                    "virtualNetworkRules": [
+                    ],
+                    "ipRules": [
+                    ],
+                    "defaultAction": "Allow"
+                },
+                "supportsHttpsTrafficOnly": true,
+                "encryption": {
+                    "services": {
+                        "file": {
+                            "enabled": true
+                        },
+                        "blob": {
+                            "enabled": true
+                        }
+                    },
+                    "keySource": "Microsoft.Storage"
+                }
+            }
+        }    
+    ],
     "outputs": {
         "storageAccountKey": {
             "type": "string",
