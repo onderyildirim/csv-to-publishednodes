@@ -1,0 +1,65 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "createStorageAccount": {
+            "type": "bool"
+        },
+        "storageAccountLocation": {
+            "type": "string"
+        },
+        "storageAccountName": {
+            "type": "string"
+        },
+        "storageAccountSku": {
+            "type": "string"
+        },
+        "storageContainerName": {
+            "type": "string"
+        },
+        "storageQueueName": {
+            "type": "string"
+        },
+        "createEventGridSystemTopic": {
+            "type": "bool"
+        },
+        "eventGridSystemTopicName": {
+            "type": "string"
+        },
+        "eventGridSubscriptionName": {
+            "type": "string"
+        },
+        "eventGridSubscriptionFilter": {
+            "type": "string"
+        }
+    },
+    "variables": {
+        "storageAccountId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
+        "storageAccountApiVersion": "[providers('Microsoft.Storage', 'StorageAccounts').apiVersions[0]]",
+        "systemTopicId": "[resourceId('Microsoft.EventGrid/systemTopics', parameters('eventGridSystemTopicName'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2019-10-01",
+            "name": "saDummyTemplate",
+            "dependsOn": [],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": []
+                },
+                "parameters": {}
+            }
+        }    ],
+    "outputs": {
+        "storageAccountKey": {
+            "type": "string",
+            "value": "[listkeys(variables('storageAccountId'), variables('storageAccountApiVersion')).keys[0].value]"
+        }
+    }
+}
