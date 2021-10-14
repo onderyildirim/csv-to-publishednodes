@@ -115,7 +115,6 @@
             "type": "Microsoft.EventGrid/systemTopics",
             "apiVersion": "2020-10-15-preview",
             "name": "[parameters('eventGridSystemTopicName')]",
-            "tags": {"fi_c_network_opex": "cf103001", "fi_delivery_status": "project"},
             "location": "[parameters('storageAccountLocation')]",
             "dependsOn": [
                 "[if(parameters('createStorageAccount'), variables('storageAccountId'), 'saDummyTemplate')]"
